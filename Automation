@@ -1,0 +1,150 @@
+alias: Reminder timers
+description: >-
+  Checks if a certain time has passed since the has been has been
+  refilled/emptied. Once a threshold has been passed, this automation activates
+  a switch stating that said thing is now empty or full.
+trigger:
+  - platform: template
+    value_template: >-
+      {{ (as_timestamp(now()) -
+      as_timestamp(states('input_datetime.last_cat_food_refill'))) >
+      (60*60*24*14) }}
+    id: "1"
+  - platform: template
+    value_template: >-
+      {{ (as_timestamp(now()) -
+      as_timestamp(states('input_datetime.last_cat_water_refill'))) >
+      (60*60*24*14) }}
+    id: "2"
+  - platform: template
+    value_template: >-
+      {{ (as_timestamp(now()) -
+      as_timestamp(states('input_datetime.last_roomba_empty'))) > (60*60*24*7)
+      }}
+    id: "3"
+  - platform: template
+    value_template: >-
+      {{ (as_timestamp(now()) -
+      as_timestamp(states('input_datetime.last_cat_water_refill'))) >
+      (60*60*24*2) }}
+    id: "4"
+  - platform: tag
+    tag_id: bb95c243-50ed-49e7-af23-22141f13a435
+    id: "5"
+  - platform: tag
+    tag_id: fd5aba95-d8e7-4952-95f5-070b838571fa
+    id: "6"
+  - platform: tag
+    tag_id: 7ec5e473-54dd-4715-8084-1b914ea75e33
+    id: "7"
+  - type: opened
+    platform: device
+    device_id: 9ca72b392391c30f36b80660297e660b
+    entity_id: binary_sensor.litter_box_contact
+    domain: binary_sensor
+    id: "8"
+condition: []
+action:
+  - if:
+      - condition: trigger
+        id: "1"
+    then:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.cat_food_container_empty
+      - service: notify.mobile_app_iphone_266
+        data:
+          message: Check the cat food so your fur babies don't die.
+  - if:
+      - condition: trigger
+        id: "2"
+    then:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id:
+            - input_boolean.cat_water_empty
+      - service: notify.mobile_app_iphone_266
+        data:
+          message: >-
+            Check the water fountain level so the cats don't have to resort to
+            drinking out of the toilet.
+  - if:
+      - condition: trigger
+        id: "3"
+    then:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.roomba_full
+      - service: notify.mobile_app_iphone_266
+        data:
+          message: Empty roomba bin
+  - if:
+      - condition: trigger
+        id: "4"
+    then:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.cat_litter_box_full
+      - service: notify.mobile_app_iphone_266
+        data:
+          message: Clean the litter box so the cats don't poo in the bed
+  - if:
+      - condition: trigger
+        id: "5"
+    then:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.cat_food_container_empty
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_cat_food_refill
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  - if:
+      - condition: trigger
+        id: "6"
+    then:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id:
+            - input_boolean.cat_water_empty
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_cat_water_refill
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  - if:
+      - condition: trigger
+        id: "7"
+    then:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id:
+            - input_boolean.roomba_full
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_roomba_empty
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  - if:
+      - condition: trigger
+        id: "8"
+    then:
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id:
+            - input_boolean.cat_litter_box_full
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_litter_box_empty
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+mode: single
